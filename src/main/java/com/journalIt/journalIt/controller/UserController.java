@@ -39,19 +39,18 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> createNewUser(@RequestBody UserEntity userDetails){
         try {
-            userDetails.setDate(LocalDateTime.now());
             userService.saveUser(userDetails);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>("User created successfully", HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User cannot be created : " + e.getMessage());
         }
 
     }
 
-    @PutMapping("/{username}")
-    public ResponseEntity<?> updateUserDetails(@RequestBody UserEntity user, @PathVariable String username){
+    @PutMapping("/{userName}")
+    public ResponseEntity<?> updateUserDetails(@RequestBody UserEntity user, @PathVariable String userName){
         try {
-            UserEntity userInDB = userService.findByUserName(username);
+            UserEntity userInDB = userService.findByUserName(userName);
             if(userInDB != null){
                 userInDB.setUserName(user.getUserName());
                 userInDB.setPassword(user.getPassword());
