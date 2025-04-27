@@ -6,6 +6,7 @@ import com.journalIt.journalIt.repository.JournalRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,11 +42,21 @@ public class JournalService {
         journalRepository.save(journal);
     }
 
-    public void deleteJournalById(ObjectId id, String username){
-        UserEntity user = userService.findByUserName(username);
-        user.getJournalEntries().removeIf(journal -> journal.getId().equals(id));
-        userService.saveUser(user);
-        journalRepository.deleteById(id);
+    @Transactional
+    public boolean deleteJournalById(ObjectId id, String username){
+        boolean isRemoved = false;
+        try {
+            UserEntity user = userService.findByUserName(username);
+            isRemoved = user.getJournalEntries().removeIf(journal -> journal.getId().equals(id));
+            if (isRemoved){
+                userService.saveUser(user);
+                journalRepository.deleteById(id);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            throw new RuntimeException("An error occured while deleting", e);
+        }
+        return isRemoved;
     }
 
 }

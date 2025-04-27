@@ -1,11 +1,14 @@
 package com.journalIt.journalIt.controller;
 
 import com.journalIt.journalIt.entity.UserEntity;
+import com.journalIt.journalIt.repository.UserRepository;
 import com.journalIt.journalIt.service.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
@@ -15,6 +18,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<?> getAllUser(){
@@ -36,37 +42,29 @@ public class UserController {
 
     }
 
-    @PostMapping
-    public ResponseEntity<?> createNewUser(@RequestBody UserEntity userDetails){
+    @PutMapping
+    public ResponseEntity<?> updateUserDetails(@RequestBody UserEntity user){
         try {
-            userService.saveUser(userDetails);
-            return new ResponseEntity<>("User created successfully", HttpStatus.OK);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User cannot be created : " + e.getMessage());
-        }
-
-    }
-
-    @PutMapping("/{userName}")
-    public ResponseEntity<?> updateUserDetails(@RequestBody UserEntity user, @PathVariable String userName){
-        try {
+            Authentication authentication =  SecurityContextHolder.getContext().getAuthentication();
+            String userName = authentication.getName();
             UserEntity userInDB = userService.findByUserName(userName);
-            if(userInDB != null){
-                userInDB.setUserName(user.getUserName());
-                userInDB.setPassword(user.getPassword());
-                userService.saveUser(userInDB);
-            }
+            userInDB.setUserName(user.getUserName());
+            userInDB.setPassword(user.getPassword());
+            userService.saveUserWithEncryptedPassword(userInDB);
+
             return ResponseEntity.status(HttpStatus.OK).body("User updated successfully!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to update user details!");
         }
     }
 
-    @DeleteMapping("/id/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable ObjectId id){
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser(){
         try {
-            userService.deleteUser(id);
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            userRepository.deleteByUserName(authentication.getName());
+            return new ResponseEntity<>("Deleted Successfully!", HttpStatus.OK);
+
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
