@@ -41,8 +41,14 @@ public class UserService {
 
     public void saveUserWithEncryptedPassword(UserEntity userDetails){
         userDetails.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-        userDetails.setRoles(Arrays.asList("ADMIN", "USER"));
+        userDetails.setRoles(List.of("USER"));
         userRepository.save(userDetails);
+    }
+
+    public UserEntity saveAdminWithEncryptedPassword(UserEntity userDetails){
+        userDetails.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        userDetails.setRoles(List.of("ADMIN"));
+        return userRepository.save(userDetails);
     }
 
     public UserEntity findByUserName(String user){
