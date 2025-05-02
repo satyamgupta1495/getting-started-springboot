@@ -14,7 +14,7 @@ import java.util.List;
 public class AdminController {
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @GetMapping("/all-user")
     public ResponseEntity<?> getAllUsers(){
